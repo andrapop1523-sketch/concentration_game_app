@@ -23,6 +23,9 @@ class _GameScreenState extends State<GameScreen> {
   int _secondsLeft = _startSeconds;
   Timer? _countdown;
 
+  // Scoring
+  int _wrongAttempts = 0;
+
   @override
   void initState() {
     super.initState();
@@ -54,7 +57,23 @@ class _GameScreenState extends State<GameScreen> {
     final m = s ~/ 60;
     final sec = s % 60;
     return '$m:${sec.toString().padLeft(2, '0')}';
-    }
+  }
+
+  int _calculateScore() {
+    if (disappearingPairs.isEmpty) return 0;
+
+    final matchScore = (disappearingPairs.length ~/ 2) * 25;
+    
+    final timeBonus = (_secondsLeft * 2) ~/ 60;
+    
+    final penalty = _wrongAttempts * 5;
+    
+    final totalScore = matchScore + timeBonus - penalty;
+
+    return totalScore < 0 ? 0 : totalScore;
+  }
+
+  int get currentScore => _calculateScore();
 
   void resetGame() {
     flipBackTimer?.cancel();
@@ -67,6 +86,7 @@ class _GameScreenState extends State<GameScreen> {
       disappearingPairs.clear();
       deck = [...colors, ...colors]..shuffle();
       _secondsLeft = _startSeconds;
+      _wrongAttempts = 0;
     });
 
     _startCountdown();
@@ -101,6 +121,8 @@ class _GameScreenState extends State<GameScreen> {
           }
         });
       } else {
+        setState(() => _wrongAttempts++);
+        
         flipBackTimer = Timer(const Duration(seconds: 1), () {
           if (!mounted) return;
           setState(flippedCards.clear);
@@ -141,6 +163,31 @@ class _GameScreenState extends State<GameScreen> {
       ),
       body: Column(
         children: [
+          // Score display
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Text(
+                  'Score: ${currentScore}',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  'Mistakes: $_wrongAttempts',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.red,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: Stack(
               children: [
@@ -179,17 +226,34 @@ class _GameScreenState extends State<GameScreen> {
                 if (allCardsDisappeared)
                   Container(
                     color: Colors.black54,
-                    child: const Center(
-                      child: Text(
-                        'You Won!',
-                        style: TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(offset: Offset(2, 2), blurRadius: 4, color: Colors.black54),
-                          ],
-                        ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'You Won!',
+                            style: TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(offset: Offset(2, 2), blurRadius: 4, color: Colors.black54),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Final Score: $currentScore',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black54),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -198,17 +262,34 @@ class _GameScreenState extends State<GameScreen> {
                 if (_timeUp && !allCardsDisappeared)
                   Container(
                     color: Colors.black54,
-                    child: const Center(
-                      child: Text(
-                        "Time's Up!",
-                        style: TextStyle(
-                          fontSize: 42,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(offset: Offset(2, 2), blurRadius: 4, color: Colors.black54),
-                          ],
-                        ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Time's Up!",
+                            style: TextStyle(
+                              fontSize: 42,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(offset: Offset(2, 2), blurRadius: 4, color: Colors.black54),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Final Score: $currentScore',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black54),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
