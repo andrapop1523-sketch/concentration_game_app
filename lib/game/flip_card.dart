@@ -6,11 +6,15 @@ class FlipCard extends StatefulWidget {
     super.key,
     required this.front,
     required this.back,
+    required this.isFlipped,
+    required this.onTap,
     this.duration = const Duration(milliseconds: 280),
   });
 
   final Widget front;
   final Widget back;
+  final bool isFlipped;
+  final VoidCallback onTap;
   final Duration duration;
 
   @override
@@ -21,17 +25,31 @@ class _FlipCardState extends State<FlipCard> with SingleTickerProviderStateMixin
   late final AnimationController _ctrl =
       AnimationController(vsync: this, duration: widget.duration);
   late final Animation<double> _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
-  bool _isFrontVisible = false;
 
-  void _toggle() {
-    _isFrontVisible ? _ctrl.reverse() : _ctrl.forward();
-    _isFrontVisible = !_isFrontVisible;
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isFlipped) {
+      _ctrl.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(FlipCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isFlipped != oldWidget.isFlipped) {
+      if (widget.isFlipped) {
+        _ctrl.forward();
+      } else {
+        _ctrl.reverse();
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _toggle,
+      onTap: widget.onTap,
       child: AnimatedBuilder(
         animation: _anim,
         builder: (_, __) {
