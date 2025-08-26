@@ -24,6 +24,18 @@ class _GameScreenState extends State<GameScreen> {
     deck = [...colors, ...colors]..shuffle();
   }
 
+  void resetGame() {
+    flipBackTimer?.cancel();
+    disappearTimer?.cancel();
+    
+    setState(() {
+      flippedCards.clear();
+      matchedPairs.clear();
+      disappearingPairs.clear();
+      deck = [...colors, ...colors]..shuffle();
+    });
+  }
+
   void onCardTap(int index) {
     if (matchedPairs.contains(index) ||
         flippedCards.contains(index) ||
@@ -69,59 +81,89 @@ class _GameScreenState extends State<GameScreen> {
     
     return Scaffold(
       appBar: AppBar(title: const Text('Balloons')),
-      body: Stack(
+      body: Column(
         children: [
-          GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 0.7,
-            ),
-            itemCount: deck.length,
-            itemBuilder: (_, i) {
-              if (disappearingPairs.contains(i)) return const SizedBox.shrink();
-              return FlipCard(
-                key: ValueKey(i),
-                isFlipped: flippedCards.contains(i) || matchedPairs.contains(i),
-                front: Center(
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: deck[i],
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+          Expanded(
+            child: Stack(
+              children: [
+                GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.7,
+                  ),
+                  itemCount: deck.length,
+                  itemBuilder: (_, i) {
+                    if (disappearingPairs.contains(i)) return const SizedBox.shrink();
+                    return FlipCard(
+                      key: ValueKey(i),
+                      isFlipped: flippedCards.contains(i) || matchedPairs.contains(i),
+                      front: Center(
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: deck[i],
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                        ),
+                      ),
+                      back: const Icon(Icons.help_outline, size: 28),
+                      onTap: () => onCardTap(i),
+                    );
+                  },
+                ),
+                if (allCardsDisappeared)
+                  Container(
+                    color: Colors.black54,
+                    child: const Center(
+                      child: Text(
+                        'You Won!',
+                        style: TextStyle(
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(2, 2),
+                              blurRadius: 4,
+                              color: Colors.black54,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                back: const Icon(Icons.help_outline, size: 28),
-                onTap: () => onCardTap(i),
-              );
-            },
-          ),
-          if (allCardsDisappeared)
-            Container(
-              color: Colors.black54,
-              child: const Center(
-                child: Text(
-                  'You Won!',
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        offset: Offset(2, 2),
-                        blurRadius: 4,
-                        color: Colors.black54,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              ],
             ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: allCardsDisappeared
+                ? ElevatedButton(
+                    onPressed: resetGame,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    child: const Text('Start'),
+                  )
+                : ElevatedButton(
+                    onPressed: resetGame,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    child: const Text('Reset'),
+                  ),
+          ),
         ],
       ),
     );
