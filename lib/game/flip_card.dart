@@ -8,6 +8,8 @@ class FlipCard extends StatefulWidget {
     required this.back,
     required this.isFlipped,
     required this.onTap,
+    required this.themeName,
+    required this.cardColor,
     this.duration = const Duration(milliseconds: 280),
   });
 
@@ -15,6 +17,8 @@ class FlipCard extends StatefulWidget {
   final Widget back;
   final bool isFlipped;
   final VoidCallback onTap;
+  final String themeName;
+  final Color cardColor;
   final Duration duration;
 
   @override
@@ -61,8 +65,10 @@ class _FlipCardState extends State<FlipCard> with SingleTickerProviderStateMixin
               ..setEntry(3, 2, 0.001)
               ..rotateY(angle),
             child: _CardFace(
-              child: showFront ? widget.front : widget.back,
               flip: showFront,
+              themeName: widget.themeName,
+              cardColor: widget.cardColor,
+              child: showFront ? widget.front : widget.back,
             ),
           );
         },
@@ -78,21 +84,36 @@ class _FlipCardState extends State<FlipCard> with SingleTickerProviderStateMixin
 }
 
 class _CardFace extends StatelessWidget {
-  const _CardFace({required this.child, required this.flip});
+  const _CardFace({
+    required this.child, 
+    required this.flip, 
+    required this.themeName,
+    required this.cardColor,
+  });
+  
   final Widget child;
   final bool flip;
+  final String themeName;
+  final Color cardColor;
 
   @override
   Widget build(BuildContext context) {
+    final borderColor = Color.fromRGBO(
+      (cardColor.r * 255.0).round() & 0xff,
+      (cardColor.g * 255.0).round() & 0xff,
+      (cardColor.b * 255.0).round() & 0xff,
+      0.3,
+    );
+    
     return Transform(
       alignment: Alignment.center,
       transform: Matrix4.identity()..rotateY(flip ? math.pi : 0),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          color: Colors.orange[100],
+          color: cardColor,
           boxShadow: kElevationToShadow[3],
-          border: Border.all(color: Colors.orange[300]!, width: 2),
+          border: Border.all(color: borderColor, width: 2),
         ),
         child: Center(child: child),
       ),

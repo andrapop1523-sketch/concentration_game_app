@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'game/game_screen.dart';
+import 'theme_selection_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,8 +17,8 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       darkTheme: ThemeData.dark(useMaterial3: true),
-      themeMode: ThemeMode.system, // auto-switch for light/dark mode
-      home: const GameScreen(),
+      themeMode: ThemeMode.system,
+      home: const ThemeSelectionScreen(),
     );
   }
 }

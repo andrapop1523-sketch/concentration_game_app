@@ -1,35 +1,47 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'flip_card.dart';
+import '../models/theme_model.dart';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
+  final GameThemeModel theme;
+  
+  const GameScreen({super.key, required this.theme});
 
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
 
 class _GameScreenState extends State<GameScreen> {
-  final colors = [Colors.red, Colors.blue, Colors.green, Colors.purple];
-  late List<Color> deck;
+  late List<dynamic> deck;
   final List<int> flippedCards = [];
   final List<int> matchedPairs = [];
   final List<int> disappearingPairs = [];
   Timer? flipBackTimer;
   Timer? disappearTimer;
 
-  // Countdown
   static const int _startSeconds = 60;
   int _secondsLeft = _startSeconds;
   Timer? _countdown;
 
-  // Scoring
   int _wrongAttempts = 0;
+
+  List<Color> get _themeColors {
+    return [Colors.red, Colors.blue, Colors.green, Colors.purple];
+  }
+
+  List<String> get _themeSymbols {
+    return widget.theme.symbols;
+  }
 
   @override
   void initState() {
     super.initState();
-    deck = [...colors, ...colors]..shuffle();
+    if (widget.theme.title.toLowerCase().contains('ballon')) {
+      deck = [..._themeColors, ..._themeColors]..shuffle();
+    } else {
+      deck = [..._themeSymbols, ..._themeSymbols]..shuffle();
+    }
     _startCountdown();
   }
 
@@ -84,7 +96,11 @@ class _GameScreenState extends State<GameScreen> {
       flippedCards.clear();
       matchedPairs.clear();
       disappearingPairs.clear();
-      deck = [...colors, ...colors]..shuffle();
+      if (widget.theme.title.toLowerCase().contains('ballon')) {
+        deck = [..._themeColors, ..._themeColors]..shuffle();
+      } else {
+        deck = [..._themeSymbols, ..._themeSymbols]..shuffle();
+      }
       _secondsLeft = _startSeconds;
       _wrongAttempts = 0;
     });
@@ -145,7 +161,7 @@ class _GameScreenState extends State<GameScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Balloons'),
+        title: Text(widget.theme.title),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -163,13 +179,12 @@ class _GameScreenState extends State<GameScreen> {
       ),
       body: Column(
         children: [
-          // Score display
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
                 Text(
-                  'Score: ${currentScore}',
+                  'Score: $currentScore',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -204,25 +219,36 @@ class _GameScreenState extends State<GameScreen> {
                     if (disappearingPairs.contains(i)) return const SizedBox.shrink();
                     return FlipCard(
                       key: ValueKey(i),
+                      themeName: widget.theme.title,
+                      cardColor: Color.fromRGBO(
+                        (widget.theme.red * 255).round(),
+                        (widget.theme.green * 255).round(),
+                        (widget.theme.blue * 255).round(),
+                        1.0,
+                      ),
                       isFlipped: flippedCards.contains(i) || matchedPairs.contains(i),
                       front: Center(
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: deck[i],
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                        ),
+                        child: widget.theme.title.toLowerCase().contains('ballon')
+                            ? Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: deck[i] as Color,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                ),
+                              )
+                            : Text(
+                                deck[i] as String,
+                                style: const TextStyle(fontSize: 28),
+                              ),
                       ),
-                      back: const Icon(Icons.help_outline, size: 28),
+                      back: const Icon(Icons.diamond, size: 28, color: Colors.white),
                       onTap: () => onCardTap(i),
                     );
                   },
                 ),
 
-                // Win overlay
                 if (allCardsDisappeared)
                   Container(
                     color: Colors.black54,
@@ -258,7 +284,6 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                   ),
 
-                // Time's up overlay
                 if (_timeUp && !allCardsDisappeared)
                   Container(
                     color: Colors.black54,
@@ -301,10 +326,8 @@ class _GameScreenState extends State<GameScreen> {
             child: ElevatedButton(
               onPressed: resetGame,
               style: ElevatedButton.styleFrom(
-                backgroundColor: allCardsDisappeared
-                    ? Colors.green
-                    : (_timeUp ? Colors.red : Colors.orange),
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.grey[300],
+                foregroundColor: Colors.black87,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
