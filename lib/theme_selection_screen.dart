@@ -56,73 +56,73 @@ class _ThemeSelectionScreenState extends State<ThemeSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Matching Pairs',
-              style: TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-                shadows: [
-                  Shadow(
-                    offset: Offset(2, 2),
-                    blurRadius: 4,
-                    color: Colors.black26,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isLandscape = constraints.maxWidth > constraints.maxHeight;
+          
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Matching Pairs',
+                  style: TextStyle(
+                    fontSize: isLandscape ? 36 : 48,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 60),
-            
-            if (isLoading)
-              const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
-              )
-            else if (errorMessage != null)
-              Column(
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: Colors.red[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    errorMessage!,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.red[600],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _downloadThemes,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
-                  children: themes.map((theme) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 24),
-                      child: _buildThemeOption(
-                        context,
-                        theme: theme,
-                        onTap: () => _navigateToGame(context, theme),
-                      ),
-                    );
-                  }).toList(),
                 ),
-              ),
-          ],
-        ),
+                const SizedBox(height: 48),
+                if (isLoading)
+                  const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                  )
+                else if (errorMessage != null)
+                  Column(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: isLandscape ? 36 : 48,
+                        color: Colors.red[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        errorMessage!,
+                        style: TextStyle(
+                          fontSize: isLandscape ? 14 : 16,
+                          color: Colors.red[600],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _downloadThemes,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  )
+                else
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isLandscape ? 64 : 32,
+                    ),
+                    child: Column(
+                      children: themes.map((theme) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 24),
+                          child: _buildThemeOption(
+                            context,
+                            theme: theme,
+                            onTap: () => _navigateToGame(context, theme),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

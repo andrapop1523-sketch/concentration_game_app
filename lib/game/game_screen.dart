@@ -26,22 +26,14 @@ class _GameScreenState extends State<GameScreen> {
 
   int _wrongAttempts = 0;
 
-  List<Color> get _themeColors {
-    return [Colors.red, Colors.blue, Colors.green, Colors.purple];
-  }
-
   List<String> get _themeSymbols {
-    return widget.theme.symbols;
+    return widget.theme.symbols.take(4).toList();
   }
 
   @override
   void initState() {
     super.initState();
-    if (widget.theme.title.toLowerCase().contains('ballon')) {
-      deck = [..._themeColors, ..._themeColors]..shuffle();
-    } else {
-      deck = [..._themeSymbols, ..._themeSymbols]..shuffle();
-    }
+    deck = [..._themeSymbols, ..._themeSymbols]..shuffle();
     _startCountdown();
   }
 
@@ -96,11 +88,7 @@ class _GameScreenState extends State<GameScreen> {
       flippedCards.clear();
       matchedPairs.clear();
       disappearingPairs.clear();
-      if (widget.theme.title.toLowerCase().contains('ballon')) {
-        deck = [..._themeColors, ..._themeColors]..shuffle();
-      } else {
-        deck = [..._themeSymbols, ..._themeSymbols]..shuffle();
-      }
+      deck = [..._themeSymbols, ..._themeSymbols]..shuffle();
       _secondsLeft = _startSeconds;
       _wrongAttempts = 0;
     });
@@ -177,165 +165,179 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Text(
-                  'Score: $currentScore',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isLandscape = constraints.maxWidth > constraints.maxHeight;
+          final crossAxisCount = isLandscape ? 4 : 3;
+          final childAspectRatio = isLandscape ? 2.0 : 0.7;
+          final gridPadding = isLandscape ? 6.0 : 16.0;
+          final gridSpacing = isLandscape ? 4.0 : 16.0;
+          
+          return Column(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isLandscape ? 12 : 16, 
+                  vertical: isLandscape ? 4 : 8
                 ),
-                const Spacer(),
-                Text(
-                  'Mistakes: $_wrongAttempts',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.red,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Stack(
-              children: [
-                GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.7,
-                  ),
-                  itemCount: deck.length,
-                  itemBuilder: (_, i) {
-                    if (disappearingPairs.contains(i)) return const SizedBox.shrink();
-                    return FlipCard(
-                      key: ValueKey(i),
-                      themeName: widget.theme.title,
-                      cardColor: Color.fromRGBO(
-                        (widget.theme.red * 255).round(),
-                        (widget.theme.green * 255).round(),
-                        (widget.theme.blue * 255).round(),
-                        1.0,
-                      ),
-                      isFlipped: flippedCards.contains(i) || matchedPairs.contains(i),
-                      front: Center(
-                        child: widget.theme.title.toLowerCase().contains('ballon')
-                            ? Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: deck[i] as Color,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 2),
-                                ),
-                              )
-                            : Text(
-                                deck[i] as String,
-                                style: const TextStyle(fontSize: 28),
-                              ),
-                      ),
-                      back: const Icon(Icons.diamond, size: 28, color: Colors.white),
-                      onTap: () => onCardTap(i),
-                    );
-                  },
-                ),
-
-                if (allCardsDisappeared)
-                  Container(
-                    color: Colors.black54,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'You Won!',
-                            style: TextStyle(
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(offset: Offset(2, 2), blurRadius: 4, color: Colors.black54),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Final Score: $currentScore',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black54),
-                              ],
-                            ),
-                          ),
-                        ],
+                child: Row(
+                  children: [
+                    Text(
+                      'Score: $currentScore',
+                      style: TextStyle(
+                        fontSize: isLandscape ? 16 : 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
                     ),
-                  ),
-
-                if (_timeUp && !allCardsDisappeared)
-                  Container(
-                    color: Colors.black54,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Time's Up!",
-                            style: TextStyle(
-                              fontSize: 42,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(offset: Offset(2, 2), blurRadius: 4, color: Colors.black54),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Final Score: $currentScore',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black54),
-                              ],
-                            ),
-                          ),
-                        ],
+                    const Spacer(),
+                    if (isLandscape) ...[
+                      ElevatedButton(
+                        onPressed: resetGame,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[300],
+                          foregroundColor: Colors.black87,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                        child: Text(allCardsDisappeared ? 'Start' : (_timeUp ? 'Retry' : 'Reset')),
                       ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: ElevatedButton(
-              onPressed: resetGame,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[300],
-                foregroundColor: Colors.black87,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ],
+                  ],
+                ),
               ),
-              child: Text(allCardsDisappeared ? 'Start' : (_timeUp ? 'Retry' : 'Reset')),
-            ),
-          ),
-        ],
+              Expanded(
+                child: Stack(
+                  children: [
+                    GridView.builder(
+                      padding: EdgeInsets.all(gridPadding),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: gridSpacing,
+                        mainAxisSpacing: gridSpacing,
+                        childAspectRatio: childAspectRatio,
+                      ),
+                      itemCount: deck.length,
+                      itemBuilder: (_, i) {
+                        if (disappearingPairs.contains(i)) return const SizedBox.shrink();
+                        return FlipCard(
+                          key: ValueKey(i),
+                          themeName: widget.theme.title,
+                          cardColor: Color.fromRGBO(
+                            (widget.theme.red * 255).round(),
+                            (widget.theme.green * 255).round(),
+                            (widget.theme.blue * 255).round(),
+                            1.0,
+                          ),
+                          isFlipped: flippedCards.contains(i) || matchedPairs.contains(i),
+                          front: Center(
+                            child:
+                                Text(
+                                    deck[i] as String,
+                                    style: TextStyle(fontSize: isLandscape ? 18 : 28),
+                                  )
+                          ),
+                          back: Icon(
+                            Icons.diamond, 
+                            size: isLandscape ? 18 : 28, 
+                            color: Colors.white
+                          ),
+                          onTap: () => onCardTap(i),
+                        );
+                      },
+                    ),
+
+                    if (allCardsDisappeared)
+                      Container(
+                        color: Colors.black54,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'You Won!',
+                                style: TextStyle(
+                                  fontSize: 48,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  shadows: [
+                                    Shadow(offset: Offset(2, 2), blurRadius: 4, color: Colors.black54),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Final Score: $currentScore',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                  shadows: [
+                                    Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black54),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                    if (_timeUp && !allCardsDisappeared)
+                      Container(
+                        color: Colors.black54,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "Time's Up!",
+                                style: TextStyle(
+                                  fontSize: 42,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  shadows: [
+                                    Shadow(offset: Offset(2, 2), blurRadius: 4, color: Colors.black54),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Final Score: $currentScore',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                  shadows: [
+                                    Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black54),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (!isLandscape)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: ElevatedButton(
+                    onPressed: resetGame,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[300],
+                      foregroundColor: Colors.black87,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    child: Text(allCardsDisappeared ? 'Start' : (_timeUp ? 'Retry' : 'Reset')),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
 }
+
