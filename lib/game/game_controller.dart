@@ -89,7 +89,8 @@ class GameController extends ChangeNotifier {
     if (timeUp ||
         _matchedPairs.contains(index) ||
         _flippedCards.contains(index) ||
-        _disappearingPairs.contains(index)) {
+        _disappearingPairs.contains(index) ||
+        _cardFlipTimer != null) {
       return;
     }
     
@@ -115,6 +116,7 @@ class GameController extends ChangeNotifier {
             if (_disappearingPairs.length == _deck.length) {
               _stopCountdown();
             }
+            _cardFlipTimer = null;
             notifyListeners();
           }
         );
@@ -125,6 +127,7 @@ class GameController extends ChangeNotifier {
           Duration(seconds: GameConstants.cardFlipDelaySeconds), 
           () {
             _flippedCards.clear();
+            _cardFlipTimer = null;
             notifyListeners();
           }
         );
