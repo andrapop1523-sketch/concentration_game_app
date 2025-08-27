@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'controllers/theme_controller.dart';
 import 'models/theme_model.dart';
 import 'game/game_screen.dart';
 
@@ -12,118 +12,144 @@ class ThemeSelectionScreen extends StatefulWidget {
 }
 
 class _ThemeSelectionScreenState extends State<ThemeSelectionScreen> {
-  List<GameThemeModel> themes = [];
-  bool isLoading = true;
-  String? errorMessage;
+  late ThemeController _themeController;
 
   @override
   void initState() {
     super.initState();
-    _downloadThemes();
+    _themeController = ThemeController();
+    _themeController.loadThemes();
   }
 
-  Future<void> _downloadThemes() async {
-    try {
-      final response = await http.get(
-        Uri.parse('https://firebasestorage.googleapis.com/v0/b/concentrationgame-20753.appspot.com/o/themes.json?alt=media&token=6898245a-0586-4fed-b30e-5078faeba078'),
-      );
+  @override
+  void dispose() {
+    _themeController.dispose();
+    super.dispose();
+  }
 
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonThemes = json.decode(response.body);
-        final List<GameThemeModel> downloadedThemes = jsonThemes
-            .map((json) => GameThemeModel.fromJson(json))
-            .toList();
-
-        setState(() {
-          themes = downloadedThemes;
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          errorMessage = 'Failed to load themes: ${response.statusCode}';
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Error loading themes: $e';
-        isLoading = false;
-      });
-    }
+  void _navigateToGame(BuildContext context, GameThemeModel theme) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GameScreen(theme: theme),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isLandscape = constraints.maxWidth > constraints.maxHeight;
-          
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Matching Pairs',
-                  style: TextStyle(
-                    fontSize: isLandscape ? 36 : 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 48),
-                if (isLoading)
-                  const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
-                  )
-                else if (errorMessage != null)
-                  Column(
+    return ChangeNotifierProvider.value(
+      value: _themeController,
+      child: Consumer<ThemeController>(
+        builder: (context, controller, child) {
+          return Scaffold(
+            backgroundColor: Colors.grey[100],
+            body: LayoutBuilder(
+              builder: (context, constraints) {
+                final isLandscape = constraints.maxWidth > constraints.maxHeight;
+                
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: isLandscape ? 36 : 48,
-                        color: Colors.red[400],
-                      ),
-                      const SizedBox(height: 16),
                       Text(
-                        errorMessage!,
+                        'Matching Pairs',
                         style: TextStyle(
-                          fontSize: isLandscape ? 14 : 16,
-                          color: Colors.red[600],
+                          fontSize: isLandscape ? 36 : 48,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _downloadThemes,
-                        child: const Text('Retry'),
-                      ),
+                      const SizedBox(height: 48),
+                      if (controller.isLoading)
+                        const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                        )
+                      else if (controller.hasError)
+                        _buildErrorState(controller, isLandscape)
+                      else if (controller.hasThemes)
+                        _buildThemeList(controller, isLandscape)
+                      else
+                        _buildEmptyState(),
                     ],
-                  )
-                else
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isLandscape ? 64 : 32,
-                    ),
-                    child: Column(
-                      children: themes.map((theme) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 24),
-                          child: _buildThemeOption(
-                            context,
-                            theme: theme,
-                            onTap: () => _navigateToGame(context, theme),
-                          ),
-                        );
-                      }).toList(),
-                    ),
                   ),
-              ],
+                );
+              },
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildErrorState(ThemeController controller, bool isLandscape) {
+    return Column(
+      children: [
+        Icon(
+          Icons.error_outline,
+          size: isLandscape ? 36 : 48,
+          color: Colors.red[400],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          controller.errorMessage ?? 'Unknown error occurred',
+          style: TextStyle(
+            fontSize: isLandscape ? 14 : 16,
+            color: Colors.red[600],
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: controller.retry,
+          child: const Text('Retry'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildThemeList(ThemeController controller, bool isLandscape) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: isLandscape ? 64 : 32,
+      ),
+      child: Column(
+        children: controller.themes.map((theme) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: _buildThemeOption(
+              context,
+              theme: theme,
+              onTap: () => _navigateToGame(context, theme),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Column(
+      children: [
+        Icon(
+          Icons.inbox_outlined,
+          size: 48,
+          color: Colors.grey[400],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'No themes available',
+          style: TextStyle(
+            fontSize: 18,
+            color: Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: () => _themeController.loadThemes(),
+          child: const Text('Refresh'),
+        ),
+      ],
     );
   }
 
@@ -176,15 +202,4 @@ class _ThemeSelectionScreenState extends State<ThemeSelectionScreen> {
       ),
     );
   }
-
-  void _navigateToGame(BuildContext context, GameThemeModel theme) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GameScreen(theme: theme),
-      ),
-    );
-  }
 }
-
-
