@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/theme_model.dart';
-import 'flip_card.dart';
 import 'game_controller.dart';
-import 'game_constants.dart';
+import 'widgets/game_header.dart';
+import 'widgets/game_grid.dart';
+import 'widgets/game_overlay.dart';
+import 'widgets/game_bottom_button.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key, required this.theme});
@@ -40,214 +42,80 @@ class _GameScreenState extends State<GameScreen> {
       value: _gameController,
       child: Consumer<GameController>(
         builder: (context, controller, child) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(widget.theme.title),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Center(
-                    child: Text(
-                      controller.formatTime(controller.secondsLeft),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final isLandscape = constraints.maxWidth > constraints.maxHeight;
+              
+              return Scaffold(
+                appBar: AppBar(
+                  title: Text(widget.theme.title),
+                  actions: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Center(
+                        child: Text(
+                          controller.formatTime(controller.secondsLeft),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    if (isLandscape) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Center(
+                          child: ElevatedButton(
+                            onPressed: () => controller.resetGame(_themeSymbols),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              foregroundColor: Theme.of(context).colorScheme.onSurface,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                            child: Text(controller.allCardsDisappeared ? 'Start' : (controller.timeUp ? 'Retry' : 'Reset')),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
-            ),
-            body: LayoutBuilder(
-              builder: (context, constraints) {
-                final isLandscape = constraints.maxWidth > constraints.maxHeight;
-                final crossAxisCount = isLandscape 
-                    ? GameConstants.landscapeCrossAxisCount 
-                    : GameConstants.portraitCrossAxisCount;
-                final childAspectRatio = isLandscape 
-                    ? GameConstants.landscapeChildAspectRatio 
-                    : GameConstants.portraitChildAspectRatio;
-                final gridPadding = isLandscape 
-                    ? GameConstants.landscapeGridPadding 
-                    : GameConstants.portraitGridPadding;
-                final gridSpacing = isLandscape 
-                    ? GameConstants.landscapeGridSpacing 
-                    : GameConstants.portraitGridSpacing;
-                
-                return Column(
+                body: Stack(
                   children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isLandscape ? 12 : 16, 
-                        vertical: isLandscape ? 4 : 8
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Score: ${controller.calculateScore()}',
-                            style: TextStyle(
-                              fontSize: isLandscape 
-                                  ? GameConstants.landscapeScoreFontSize 
-                                  : GameConstants.portraitScoreFontSize,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
+                    Column(
+                      children: [
+                        // Add space for the score header
+                        SizedBox(height: isLandscape ? 30 : 50),
+                        Expanded(
+                          child: GameGrid(
+                            isLandscape: isLandscape,
+                            theme: widget.theme,
                           ),
-                          const Spacer(),
-                          if (isLandscape) ...[
-                            ElevatedButton(
-                              onPressed: () => controller.resetGame(_themeSymbols),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                foregroundColor: Theme.of(context).colorScheme.onSurface,
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                              ),
-                              child: Text(controller.allCardsDisappeared ? 'Start' : (controller.timeUp ? 'Retry' : 'Reset')),
-                            ),
-                          ],
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    Expanded(
-                      child: Stack(
-                        children: [
-                          GridView.builder(
-                            padding: EdgeInsets.all(gridPadding),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: crossAxisCount,
-                              crossAxisSpacing: gridSpacing,
-                              mainAxisSpacing: gridSpacing,
-                              childAspectRatio: childAspectRatio,
-                            ),
-                            itemCount: controller.deck.length,
-                            itemBuilder: (_, i) {
-                              if (controller.disappearingPairs.contains(i)) return const SizedBox.shrink();
-                              return FlipCard(
-                                key: ValueKey(i),
-                                themeName: widget.theme.title,
-                                cardColor: Color.fromRGBO(
-                                  (widget.theme.red * 255).round(),
-                                  (widget.theme.green * 255).round(),
-                                  (widget.theme.blue * 255).round(),
-                                  1.0,
-                                ),
-                                isFlipped: controller.flippedCards.contains(i) || controller.matchedPairs.contains(i),
-                                front: Center(
-                                  child: Text(
-                                    controller.deck[i] as String,
-                                    style: TextStyle(
-                                      fontSize: isLandscape 
-                                          ? GameConstants.landscapeCardTextFontSize 
-                                          : GameConstants.portraitCardTextFontSize
-                                    ),
-                                  ),
-                                ),
-                                back: Center(
-                                  child: Text(
-                                    widget.theme.cardSymbol,
-                                    style: TextStyle(
-                                      fontSize: isLandscape 
-                                          ? GameConstants.landscapeCardTextFontSize 
-                                          : GameConstants.portraitCardTextFontSize
-                                    ),
-                                  ),
-                                ),
-                                onTap: () => controller.onCardTap(i),
-                              );
-                            },
-                          ),
-
-                          if (controller.allCardsDisappeared)
-                            Container(
-                              color: Colors.black54,
-                              child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      'You Won!',
-                                      style: TextStyle(
-                                        fontSize: 48,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                        shadows: [
-                                          Shadow(offset: Offset(2, 2), blurRadius: 4, color: Colors.black54),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Final Score: ${controller.calculateScore()}',
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                        shadows: [
-                                          Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black54),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                          if (controller.timeUp && !controller.allCardsDisappeared)
-                            Container(
-                              color: Colors.black54,
-                              child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      "Time's Up!",
-                                      style: TextStyle(
-                                        fontSize: 42,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                        shadows: [
-                                          Shadow(offset: Offset(2, 2), blurRadius: 4, color: Colors.black54),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Final Score: ${controller.calculateScore()}',
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                        shadows: [
-                                          Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black54),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                        ],
+                    const GameOverlay(),
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: GameHeader(
+                        isLandscape: isLandscape,
+                        themeSymbols: _themeSymbols,
                       ),
                     ),
                     if (!isLandscape)
-                      Container(
-                        padding: const EdgeInsets.only(bottom: 32, left: 16, right: 16),
-                        child: ElevatedButton(
-                          onPressed: () => controller.resetGame(_themeSymbols),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                            foregroundColor: Theme.of(context).colorScheme.onSurface,
-                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                            textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          child: Text(controller.allCardsDisappeared ? 'Start' : (controller.timeUp ? 'Retry' : 'Reset')),
-                        ),
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: GameBottomButton(themeSymbols: _themeSymbols),
                       ),
                   ],
-                );
-              },
-            ),
+                ),
+              );
+            },
           );
         },
       ),
