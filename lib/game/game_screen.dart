@@ -143,12 +143,15 @@ class _GameScreenState extends State<GameScreen> {
                                     ),
                                   ),
                                 ),
-                                back: Icon(
-                                  Icons.diamond, 
-                                  size: isLandscape 
-                                      ? GameConstants.landscapeCardIconSize 
-                                      : GameConstants.portraitCardIconSize, 
-                                  color: Colors.white
+                                back: Center(
+                                  child: Text(
+                                    widget.theme.cardSymbol,
+                                    style: TextStyle(
+                                      fontSize: isLandscape 
+                                          ? GameConstants.landscapeCardTextFontSize 
+                                          : GameConstants.portraitCardTextFontSize
+                                    ),
+                                  ),
                                 ),
                                 onTap: () => controller.onCardTap(i),
                               );
