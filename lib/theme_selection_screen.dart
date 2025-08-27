@@ -43,7 +43,7 @@ class _ThemeSelectionScreenState extends State<ThemeSelectionScreen> {
       child: Consumer<ThemeController>(
         builder: (context, controller, child) {
           return Scaffold(
-            backgroundColor: Colors.grey[100],
+            backgroundColor: Theme.of(context).colorScheme.surface,
             body: LayoutBuilder(
               builder: (context, constraints) {
                 final isLandscape = constraints.maxWidth > constraints.maxHeight;
@@ -57,13 +57,13 @@ class _ThemeSelectionScreenState extends State<ThemeSelectionScreen> {
                         style: TextStyle(
                           fontSize: isLandscape ? 36 : 48,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 48),
                       if (controller.isLoading)
-                        const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                        CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
                         )
                       else if (controller.hasError)
                         _buildErrorState(controller, isLandscape)
@@ -88,14 +88,14 @@ class _ThemeSelectionScreenState extends State<ThemeSelectionScreen> {
         Icon(
           Icons.error_outline,
           size: isLandscape ? 36 : 48,
-          color: Colors.red[400],
+          color: Theme.of(context).colorScheme.error,
         ),
         const SizedBox(height: 16),
         Text(
           controller.errorMessage ?? 'Unknown error occurred',
           style: TextStyle(
             fontSize: isLandscape ? 14 : 16,
-            color: Colors.red[600],
+            color: Theme.of(context).colorScheme.error,
           ),
           textAlign: TextAlign.center,
         ),
@@ -134,14 +134,14 @@ class _ThemeSelectionScreenState extends State<ThemeSelectionScreen> {
         Icon(
           Icons.inbox_outlined,
           size: 48,
-          color: Colors.grey[400],
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
         ),
         const SizedBox(height: 16),
         Text(
           'No themes available',
           style: TextStyle(
             fontSize: 18,
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         const SizedBox(height: 16),
@@ -164,7 +164,7 @@ class _ThemeSelectionScreenState extends State<ThemeSelectionScreen> {
         width: double.infinity,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.blue[400],
+          color: Theme.of(context).colorScheme.primary,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -173,7 +173,7 @@ class _ThemeSelectionScreenState extends State<ThemeSelectionScreen> {
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(color: Colors.blue[600]!, width: 2),
+          border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8), width: 2),
         ),
         child: Row(
           children: [

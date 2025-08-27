@@ -90,7 +90,7 @@ class _GameScreenState extends State<GameScreen> {
                                   ? GameConstants.landscapeScoreFontSize 
                                   : GameConstants.portraitScoreFontSize,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                           const Spacer(),
@@ -98,8 +98,8 @@ class _GameScreenState extends State<GameScreen> {
                             ElevatedButton(
                               onPressed: () => controller.resetGame(_themeSymbols),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.grey[300],
-                                foregroundColor: Colors.black87,
+                                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                foregroundColor: Theme.of(context).colorScheme.onSurface,
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                 textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                               ),
@@ -229,12 +229,12 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                     if (!isLandscape)
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.only(bottom: 32, left: 16, right: 16),
                         child: ElevatedButton(
                           onPressed: () => controller.resetGame(_themeSymbols),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[300],
-                            foregroundColor: Colors.black87,
+                            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            foregroundColor: Theme.of(context).colorScheme.onSurface,
                             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                             textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
